@@ -1,0 +1,30 @@
+{
+  "name": "genyo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "commonjs",
+  "scripts": {
+    "invoke": "npx sls invoke local --function hit-point-start-morning",
+    "deploy": "SLS_DEBUG=* npx sls deploy"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "0.21.1",
+    "chrome-aws-lambda": "9.1.0",
+    "puppeteer-core": "9.1.1"
+  },
+  "devDependencies": {
+    "@sentry/serverless": "6.3.5",
+    "eslint": "7.25.0",
+    "eslint-config-standard": "16.0.2",
+    "eslint-plugin-import": "2.22.1",
+    "eslint-plugin-node": "11.1.0",
+    "eslint-plugin-promise": "4.3.1",
+    "puppeteer": "9.1.1",
+    "serverless": "2.40.0",
+    "serverless-plugin-include-dependencies": "4.1.0"
+  }
+}

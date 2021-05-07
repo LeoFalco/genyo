@@ -1,0 +1,30 @@
+name: Continuous deployment
+
+on:
+  push:
+    branches:
+      - master
+      - preview
+  pull_request:
+    branches:
+      - "**"
+
+jobs:
+  api:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 12.x
+
+      - run: npm install
+
+      - name: deploy
+        if: github.ref == 'refs/heads/master'
+        working-directory: ./packages/api
+        run: |
+          npx serverless config credentials --provider aws --key ${{ secrets.AWS_ACCESS_KEY_ID }} --secret ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          npx serverless deploy --stage preview

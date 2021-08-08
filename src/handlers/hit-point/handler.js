@@ -19,7 +19,11 @@ async function closeBrowser (browser) {
 
 async function getDataFromNavigatorPage () {
   const browser = await chromium.puppeteer.launch({
-    headless: true
+    args: chromium.args,
+    defaultViewport: chromium.defaultViewport,
+    executablePath: await chromium.executablePath,
+    headless: true,
+    ignoreHTTPSErrors: true
   })
   console.log('browser created')
 
@@ -59,66 +63,49 @@ async function getDataFromNavigatorPage () {
 }
 
 async function handler () {
-  const browser = null
+  const { googleKey, cookie } = await getDataFromNavigatorPage()
+  console.log('googleKey', googleKey)
+  console.log('cookie', cookie)
 
-  try {
-    const { googleKey, cookie } = await getDataFromNavigatorPage()
-    console.log('googleKey', googleKey)
-    console.log('cookie', cookie)
+  const capchaResponseToken = await new CaptchaResolver({
+    apiKey: CAPTCHA_API_KEY,
+    baseURL: CAPTCHA_RESOLVER_URL
+  }).resolveCapcha({
+    googleKey: googleKey,
+    pageurl: GENYO_URL
+  })
 
-    const capchaResponseToken = await new CaptchaResolver({
-      apiKey: CAPTCHA_API_KEY,
-      baseURL: CAPTCHA_RESOLVER_URL
-    }).resolveCapcha({
-      googleKey: googleKey,
-      pageurl: GENYO_URL
-    })
+  console.log('capchaResponseToken', capchaResponseToken)
 
-    console.log('capchaResponseToken', capchaResponseToken)
+  const pointType = process.env.POINT_TYPE
 
-    const pointType = process.env.POINT_TYPE
-
-    const reponseHeaders = await fetch('https://app.genyo.com.br/registrarPonto', {
-      method: 'POST',
-      referrer: 'https://app.genyo.com.br/?aba=abaColaborador',
-      referrerPolicy: 'strict-origin-when-cross-origin',
-      body: `codigoEmpresa=2WRBK&numeroAcesso=629268&foto=&observacao=&g-recaptcha-response=${capchaResponseToken}&${pointType}=1`,
-      mode: 'cors',
-      headers: {
-        accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-        'accept-language': 'pt-BR,pt;q=0.9,es;q=0.8,en;q=0.7',
-        'cache-control': 'no-cache',
-        'content-type': 'application/x-www-form-urlencoded',
-        pragma: 'no-cache',
-        'sec-ch-ua': '"Chromium";v="92", " Not A;Brand";v="99", "Google Chrome";v="92"',
-        'sec-ch-ua-mobile': '?0',
-        'sec-fetch-dest': 'document',
-        'sec-fetch-mode': 'navigate',
-        'sec-fetch-site': 'same-origin',
-        'sec-fetch-user': '?1',
-        'upgrade-insecure-requests': '1',
-        cookie: cookie
-      }
-    }).then(response => response.headers)
-
-    console.log('reponseHeaders', reponseHeaders)
-
-    return {
-      code: 'ok'
+  const responseHeaders = await fetch('https://app.genyo.com.br/registrarPonto', {
+    method: 'POST',
+    referrer: 'https://app.genyo.com.br/?aba=abaColaborador',
+    referrerPolicy: 'strict-origin-when-cross-origin',
+    body: `codigoEmpresa=2WRBK&numeroAcesso=629268&foto=&observacao=&g-recaptcha-response=${capchaResponseToken}&${pointType}=1`,
+    mode: 'cors',
+    headers: {
+      accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+      'accept-language': 'pt-BR,pt;q=0.9,es;q=0.8,en;q=0.7',
+      'cache-control': 'no-cache',
+      'content-type': 'application/x-www-form-urlencoded',
+      pragma: 'no-cache',
+      'sec-ch-ua': '"Chromium";v="92", " Not A;Brand";v="99", "Google Chrome";v="92"',
+      'sec-ch-ua-mobile': '?0',
+      'sec-fetch-dest': 'document',
+      'sec-fetch-mode': 'navigate',
+      'sec-fetch-site': 'same-origin',
+      'sec-fetch-user': '?1',
+      'upgrade-insecure-requests': '1',
+      cookie: cookie
     }
-  } catch (err) {
-    console.log('err', err)
-    if (browser) {
-      await browser.close()
-    }
+  }).then(response => response.headers)
 
-    return {
-      code: 'err',
-      err: {
-        message: err.message,
-        stack: err.stack
-      }
-    }
+  console.log('responseHeaders', responseHeaders)
+
+  return {
+    code: 'ok'
   }
 };
 

@@ -4,7 +4,7 @@ org: leonardofalco
 frameworkVersion: '2'
 
 package:
-  excludeDevDependencies: false
+  excludeDevDependencies: true
 
 
 plugins:
@@ -13,7 +13,10 @@ plugins:
 provider:
   name: aws
   lambdaHashingVersion: 20201221
-  memorySize: 128
+  memorySize: 1024
+  timeout: 120
+  logRetentionInDays: 14
+  versionFunctions: false
   runtime: nodejs12.x
   stage: dev
   region: sa-east-1

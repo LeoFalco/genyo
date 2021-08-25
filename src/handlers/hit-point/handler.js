@@ -79,8 +79,9 @@ async function handler () {
 
   const currentHour = new Date().getHours()
 
-  delay(1000)
   const pointType = [8, 13].includes(currentHour) ? 'entrada' : 'saida'
+  console.log('currentHour', currentHour)
+  console.log('pointType', pointType)
 
   const cookieWithAuthorizedDevice = `${cookie}; 15635603234114962=j%3A%2261114490965fdd0b529a43a1%22`
   await fetch('https://app.genyo.com.br/registrarPonto', {

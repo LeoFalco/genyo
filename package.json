@@ -5,7 +5,7 @@
   "main": "index.js",
   "type": "commonjs",
   "scripts": {
-    "invoke": "npx sls invoke local --function hit-point-start-morning",
+    "invoke": "npx sls invoke local --function hit-point-start",
     "test": "echo 'no tests to run'",
     "deploy-prod": "SLS_DEBUG=* npx sls deploy --stage prod"
   },

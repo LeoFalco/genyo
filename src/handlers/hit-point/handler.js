@@ -77,8 +77,10 @@ async function handler () {
 
   console.log('capchaResponseToken', capchaResponseToken)
 
+  const currentHour = new Date().getHours()
+
   delay(1000)
-  const pointType = process.env.POINT_TYPE
+  const pointType = [8, 13].includes(currentHour) ? 'entrada' : 'saida'
 
   const cookieWithAuthorizedDevice = `${cookie}; 15635603234114962=j%3A%2261114490965fdd0b529a43a1%22`
   await fetch('https://app.genyo.com.br/registrarPonto', {

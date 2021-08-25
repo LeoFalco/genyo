@@ -78,7 +78,7 @@ class CaptchaResolver {
 
     let attempts = 0
     while (attempts < MAX_ATTEMPTS) {
-      await delay(ms('5s'))
+      await delay(ms('15s'))
 
       console.log('attempts', attempts)
 

@@ -77,9 +77,11 @@ async function handler () {
 
   console.log('capchaResponseToken', capchaResponseToken)
 
+  delay(1000)
   const pointType = process.env.POINT_TYPE
 
-  const responseHeaders = await fetch('https://app.genyo.com.br/registrarPonto', {
+  const cookieWithAuthorizedDevice = `${cookie}; 15635603234114962=j%3A%2261114490965fdd0b529a43a1%22`
+  await fetch('https://app.genyo.com.br/registrarPonto', {
     method: 'POST',
     referrer: 'https://app.genyo.com.br/?aba=abaColaborador',
     referrerPolicy: 'strict-origin-when-cross-origin',
@@ -98,11 +100,9 @@ async function handler () {
       'sec-fetch-site': 'same-origin',
       'sec-fetch-user': '?1',
       'upgrade-insecure-requests': '1',
-      cookie: cookie
+      cookie: cookieWithAuthorizedDevice
     }
-  }).then(response => response.headers)
-
-  console.log('responseHeaders', responseHeaders)
+  })
 
   return {
     code: 'ok'

@@ -23,7 +23,7 @@
     "utf-8-validate": "5.0.5"
   },
   "devDependencies": {
-    "@sentry/serverless": "6.13.1",
+    "@sentry/serverless": "6.13.2",
     "eslint": "7.32.0",
     "eslint-config-standard": "16.0.3",
     "eslint-plugin-import": "2.22.1",

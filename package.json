@@ -29,7 +29,7 @@
     "eslint-plugin-import": "2.25.1",
     "eslint-plugin-node": "11.1.0",
     "eslint-plugin-promise": "5.1.0",
-    "puppeteer": "9.1.1",
+    "puppeteer": "10.4.0",
     "serverless": "2.62.0",
     "serverless-plugin-include-dependencies": "5.0.0"
   }

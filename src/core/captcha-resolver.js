@@ -1,25 +1,27 @@
 'use strict'
 
-const { default: axios } = require('axios')
+const fetch = require('node-fetch')
+
 const ms = require('ms')
 const { delay } = require('./delay')
 
 const MAX_ATTEMPTS = 20
 
 function isError (response) {
-  return String(response.data.request).startsWith('ERROR')
+  return String(response.request).startsWith('ERROR')
 }
 
 function isResolved (response) {
-  return String(response.data.status) === '1'
+  return String(response.status) === '1'
 }
 
 function extractRequestId (response) {
-  return String(response.data.request)
+  console.log(response)
+  return String(response.request)
 }
 
 function extractCapchaResponse (response) {
-  return String(response.data.request)
+  return String(response.request)
 }
 
 class ServiceError extends Error {
@@ -38,63 +40,60 @@ class MaxAttemptsError extends Error {
 class CaptchaResolver {
   constructor ({ apiKey, baseURL }) {
     this.apiKey = apiKey
-    this.client = axios.default.create({
-      baseURL: baseURL
-    })
   }
 
   async startCapchaResolution ({ pageurl, googleKey }) {
-    return this.client.request({
+    return fetch('http://2captcha.com/in.php', {
       method: 'POST',
-      url: 'in.php',
-      params: {
+      body: new URLSearchParams({
         key: this.apiKey,
-        googlekey: googleKey,
-        pageurl: pageurl,
         method: 'userrecaptcha',
+        googlekey: googleKey,
+        pageurl,
         json: 1
-      }
-    })
+      })
+    }).then(response => response.json())
+      .then(extractRequestId)
   }
 
   async verifyCapchaResponse ({ requestId }) {
-    return this.client.request({
+    return fetch('http://2captcha.com/res.php', {
       method: 'POST',
-      url: 'res.php',
-      params: {
+      body: new URLSearchParams({
         key: this.apiKey,
         id: requestId,
         action: 'get',
         json: 1,
         header_acao: 1
-      }
-    })
+      })
+    }).then(response => response.json())
   }
 
   async resolveCapcha ({ pageurl, googleKey }) {
     const requestId = await this.startCapchaResolution({ pageurl, googleKey })
-      .then(extractRequestId)
+
     console.log('requestId', requestId)
 
     let attempts = 0
-    while (attempts < MAX_ATTEMPTS) {
+    do {
+      console.log('waiting for 15s to check for capcha resolution')
       await delay(ms('15s'))
 
       console.log('attempts', attempts)
 
       const response = await this.verifyCapchaResponse({ requestId })
-      console.log('response', response.data)
-
-      if (isError(response)) {
-        throw new ServiceError(response)
-      }
+      console.log('response', response)
 
       if (isResolved(response)) {
         return extractCapchaResponse(response)
       }
 
+      if (isError(response)) {
+        throw new ServiceError(response)
+      }
+
       attempts++
-    }
+    } while (attempts < MAX_ATTEMPTS)
 
     throw new MaxAttemptsError()
   }

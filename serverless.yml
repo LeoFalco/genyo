@@ -20,15 +20,11 @@ provider:
   runtime: nodejs12.x
   stage: dev
   region: sa-east-1
+  environment:
+    TZ: America/Sao_Paulo
 
 functions:
-  hit-point-start:
+  hit-point:
     handler: src/handlers/hit-point/handler.handler
     timeout: 120
-    events:
-      - schedule: cron(0 8/12 ? * MON-FRI *)
 
-  hit-point-stop:
-    handler: src/handlers/hit-point/handler.handler
-    events:
-      - schedule: cron(30 13/17 ? * MON-FRI *)

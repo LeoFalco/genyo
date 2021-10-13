@@ -85,7 +85,7 @@ async function getPointType ({ now }) {
     { hour: 8, minute: 0, type: 'entrada' },
     { hour: 12, minute: 0, type: 'saida' },
     { hour: 13, minute: 30, type: 'entrada' },
-    { hour: 15, minute: 30, type: 'saida' }
+    { hour: 17, minute: 30, type: 'saida' }
   ]
 
   const mappedDates = dates.map(date => {
@@ -116,18 +116,9 @@ async function hitPointRequest ({ capchaResponseToken, pointType, cookie }) {
     }),
     mode: 'cors',
     headers: {
-      accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-      'accept-language': 'pt-BR,pt;q=0.9,es;q=0.8,en;q=0.7',
-      'cache-control': 'no-cache',
+      accept: 'text/html,application/xhtml+xml,application/xml',
       'content-type': 'application/x-www-form-urlencoded',
       pragma: 'no-cache',
-      'sec-ch-ua': '"Chromium";v="92", " Not A;Brand";v="99", "Google Chrome";v="92"',
-      'sec-ch-ua-mobile': '?0',
-      'sec-fetch-dest': 'document',
-      'sec-fetch-mode': 'navigate',
-      'sec-fetch-site': 'same-origin',
-      'sec-fetch-user': '?1',
-      'upgrade-insecure-requests': '1',
       cookie: `${cookie}; 15635603234114962=j%3A%2261114490965fdd0b529a43a1%22`
     }
   })
@@ -139,19 +130,10 @@ async function checkIfHitPointHasSuccessful ({ cookie, now, pointType }) {
 
   const resultHtml = await fetch('https://app.genyo.com.br/c/historicoPontos', {
     headers: {
-      accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-      'accept-language': 'pt-BR,pt;q=0.9,en;q=0.8,es;q=0.7',
+      accept: 'text/html,application/xhtml+xml,application/xml',
       'cache-control': 'no-cache',
       'content-type': 'application/x-www-form-urlencoded',
       pragma: 'no-cache',
-      'sec-ch-ua': '"Chromium";v="94", "Google Chrome";v="94", ";Not A Brand";v="99"',
-      'sec-ch-ua-mobile': '?0',
-      'sec-ch-ua-platform': '"Linux"',
-      'sec-fetch-dest': 'document',
-      'sec-fetch-mode': 'navigate',
-      'sec-fetch-site': 'same-origin',
-      'sec-fetch-user': '?1',
-      'upgrade-insecure-requests': '1',
       cookie: `${cookie}; 15635603234114962=j%3A%2261114490965fdd0b529a43a1%22`
     },
     referrer: 'https://app.genyo.com.br/c/historicoPontos',

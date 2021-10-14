@@ -215,6 +215,8 @@ async function checkIfHitPointHasSuccessful ({ cookie, now, pointType }) {
 }
 
 async function handler () {
+  console.log(new Date().toLocaleString())
+
   const browser = await createBrowser()
   const { googleKey, cookie } = await getDataFromNavigatorPage({
     browser
@@ -236,12 +238,12 @@ async function handler () {
 
   const capchaResponseToken = await capchaResolver.resolveCapcha({
     googleKey: googleKey,
-    pageurl: GENYO_URL
+    pageUrl: GENYO_URL
   })
 
   console.log('capchaResponseToken', capchaResponseToken)
-  const { now } = getCurrentHour()
 
+  const { now } = getCurrentHour()
   console.log('now', format(now, 'dd/MM/yyyy hh:mm z'))
 
   const pointType = await getPointType({ now })
@@ -260,6 +262,7 @@ async function handler () {
     now
   })
 
+  console.log(new Date().toLocaleString())
   return {
     code: 'ok'
   }

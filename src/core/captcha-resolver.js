@@ -1,7 +1,6 @@
 'use strict'
 
 const fetch = require('node-fetch')
-
 const ms = require('ms')
 const { delay } = require('./delay')
 
@@ -16,7 +15,6 @@ function isResolved (response) {
 }
 
 function extractRequestId (response) {
-  console.log(response)
   return String(response.request)
 }
 
@@ -26,7 +24,7 @@ function extractCapchaResponse (response) {
 
 class ServiceError extends Error {
   constructor (response) {
-    const message = String(response.data.request || 'Unknown error')
+    const message = String(response.request || 'Unknown error')
     super(`Capcha resolver service error: ${message}`)
   }
 }
@@ -42,18 +40,29 @@ class CaptchaResolver {
     this.apiKey = apiKey
   }
 
-  async startCapchaResolution ({ pageurl, googleKey }) {
+  async startCapchaResolution ({ pageUrl, googleKey }) {
     return fetch('http://2captcha.com/in.php', {
       method: 'POST',
       body: new URLSearchParams({
         key: this.apiKey,
         method: 'userrecaptcha',
         googlekey: googleKey,
-        pageurl,
+        pageurl: pageUrl,
         json: 1
       })
     }).then(response => response.json())
-      .then(extractRequestId)
+  }
+
+  async getBalance () {
+    return fetch('http://2captcha.com/res.php', {
+      method: 'POST',
+      body: new URLSearchParams({
+        action: 'getbalance',
+        key: this.apiKey,
+        json: 1,
+        header_acao: 1
+      })
+    }).then(response => response.json())
   }
 
   async verifyCapchaResponse ({ requestId }) {
@@ -62,34 +71,37 @@ class CaptchaResolver {
       body: new URLSearchParams({
         key: this.apiKey,
         id: requestId,
-        action: 'get',
+        action: 'get2',
         json: 1,
         header_acao: 1
       })
     }).then(response => response.json())
   }
 
-  async resolveCapcha ({ pageurl, googleKey }) {
-    const requestId = await this.startCapchaResolution({ pageurl, googleKey })
+  async resolveCapcha ({ pageUrl, googleKey }) {
+    const balanceResponse = await this.getBalance()
+    console.log('balanceResponse', balanceResponse)
 
-    console.log('requestId', requestId)
+    const startCapchaResolutionResponse = await this.startCapchaResolution({ pageUrl, googleKey })
+    console.log('startCapchaResolutionResponse', startCapchaResolutionResponse)
+    const requestId = extractRequestId(startCapchaResolutionResponse)
 
     let attempts = 0
     do {
+      console.log('attempts', attempts)
       console.log('waiting for 15s to check for capcha resolution')
       await delay(ms('15s'))
 
-      console.log('attempts', attempts)
+      const verifyCapchaResponse = await this.verifyCapchaResponse({ requestId })
 
-      const response = await this.verifyCapchaResponse({ requestId })
-      console.log('response', response)
+      console.log('verifyCapchaResponse', verifyCapchaResponse)
 
-      if (isResolved(response)) {
-        return extractCapchaResponse(response)
+      if (isResolved(verifyCapchaResponse)) {
+        return extractCapchaResponse(verifyCapchaResponse)
       }
 
-      if (isError(response)) {
-        throw new ServiceError(response)
+      if (isError(verifyCapchaResponse)) {
+        throw new ServiceError(verifyCapchaResponse)
       }
 
       attempts++

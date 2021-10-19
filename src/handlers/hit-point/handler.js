@@ -217,6 +217,14 @@ async function checkIfHitPointHasSuccessful ({ cookie, now, pointType }) {
 async function handler () {
   console.log(new Date().toLocaleString())
 
+  const timeToSleep = ms('4m') * Math.random()
+
+  console.log('timeToSleep', timeToSleep / 1000, 'seconds')
+
+  await delay(timeToSleep)
+
+  console.log('timeToSleep finished', new Date().toLocaleString())
+
   const browser = await createBrowser()
   const { googleKey, cookie } = await getDataFromNavigatorPage({
     browser

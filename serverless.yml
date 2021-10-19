@@ -1,5 +1,5 @@
 service: genyo
-app: genio
+app: genyo
 org: leonardofalco
 frameworkVersion: '2'
 

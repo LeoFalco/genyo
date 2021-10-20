@@ -22,6 +22,10 @@ function extractCapchaResponse (response) {
   return String(response.request)
 }
 
+function extractBalanceResponse (response) {
+  return Number(response.request)
+}
+
 class ServiceError extends Error {
   constructor (response) {
     const message = String(response.request || 'Unknown error')
@@ -97,7 +101,10 @@ class CaptchaResolver {
       console.log('verifyCapchaResponse', verifyCapchaResponse)
 
       if (isResolved(verifyCapchaResponse)) {
-        return extractCapchaResponse(verifyCapchaResponse)
+        return {
+          capchaResponse: extractCapchaResponse(verifyCapchaResponse),
+          balance: extractBalanceResponse(balanceResponse)
+        }
       }
 
       if (isError(verifyCapchaResponse)) {

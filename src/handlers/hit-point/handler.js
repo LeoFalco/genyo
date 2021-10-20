@@ -1,20 +1,18 @@
 'use strict'
 
-const chromium = require('chrome-aws-lambda')
 const ms = require('ms')
+const chromium = require('chrome-aws-lambda')
+const fetch = require('node-fetch')
+const notifier = require('node-notifier')
+const { delay } = require('../../core/delay')
+const { format, setMinutes, setHours, closestIndexTo } = require('date-fns')
+const { utcToZonedTime } = require('date-fns-tz')
 const { URL } = require('url')
 const { CaptchaResolver } = require('../../core/captcha-resolver')
-const { delay } = require('../../core/delay')
-const fetch = require('node-fetch')
-const { format, differenceInMinutes, setMinutes, setHours, closestIndexTo } = require('date-fns')
 
 const CAPTCHA_API_KEY = '6f22570623a8b7eb2158155f11f171a0'
 const GENYO_URL = 'https://app.genyo.com.br?aba=registrarPonto'
 const CAPTCHA_RESOLVER_URL = 'http://2captcha.com'
-const fs = require('fs')
-
-const DomParser = require('dom-parser')
-const { utcToZonedTime } = require('date-fns-tz')
 
 async function closeBrowser (browser) {
   if (browser) {
@@ -101,7 +99,7 @@ async function getPointType ({ now }) {
   return closestDate.type
 }
 
-async function hitPointRequest ({ capchaResponseToken, pointType, cookie }) {
+async function hitPointRequest ({ capchaResponse, pointType, cookie }) {
   await fetch('https://app.genyo.com.br/registrarPonto', {
     method: 'POST',
     referrer: 'https://app.genyo.com.br/?aba=abaColaborador',
@@ -111,7 +109,7 @@ async function hitPointRequest ({ capchaResponseToken, pointType, cookie }) {
       numeroAcesso: '629268',
       foto: '',
       observacao: '',
-      'g-recaptcha-response': capchaResponseToken,
+      'g-recaptcha-response': capchaResponse,
       [pointType]: 1
     }),
     mode: 'cors',
@@ -124,94 +122,6 @@ async function hitPointRequest ({ capchaResponseToken, pointType, cookie }) {
   })
 
   console.log('hit point request sent')
-}
-async function checkIfHitPointHasSuccessful ({ cookie, now, pointType }) {
-  const nowFormatted = format(now, 'dd/MM/yyyy')
-
-  const resultHtml = await fetch('https://app.genyo.com.br/c/historicoPontos', {
-    headers: {
-      accept: 'text/html,application/xhtml+xml,application/xml',
-      'cache-control': 'no-cache',
-      'content-type': 'application/x-www-form-urlencoded',
-      pragma: 'no-cache',
-      cookie: `${cookie}; 15635603234114962=j%3A%2261114490965fdd0b529a43a1%22`
-    },
-    referrer: 'https://app.genyo.com.br/c/historicoPontos',
-    referrerPolicy: 'strict-origin-when-cross-origin',
-    body: new URLSearchParams({
-      dataInicio: nowFormatted,
-      dataFim: nowFormatted
-    }),
-    method: 'POST',
-    mode: 'cors',
-    credentials: 'include'
-  }).then(res => res.text())
-
-  // const resultHtml = fs.readFileSync('./log.html', { encoding: 'utf-8' })
-
-  const domParser = new DomParser()
-
-  fs.writeFileSync('./log.html', resultHtml, { encoding: 'utf-8' })
-
-  const document = domParser.parseFromString(resultHtml, {
-    lowerCaseTags: true,
-    lowerCaseAttributeNames: true,
-    xmlMode: true
-  })
-
-  const todayId = format(now, 'ddMMyyyy')
-  const todayElement = document.getElementById(todayId)
-
-  if (!todayElement) {
-    console.log('today element not found')
-    return false
-  }
-
-  const [timeline] = todayElement.getElementsByClassName('timeline')
-
-  if (!timeline) {
-    console.log('timeline not found')
-    return false
-  }
-
-  const timelineItems = Array.from(timeline.getElementsByTagName('li'))
-
-  const dates = timelineItems.map(item => {
-    const [timestampElement] = item.getElementsByClassName('timestamp')
-    const [dateElement] = timestampElement.getElementsByClassName('date')
-    const timeFormatted = dateElement.textContent.trim()
-    const [hour, minute] = timeFormatted.split(':').map(time => parseInt(time))
-
-    const date = setHours(setMinutes(now, minute), hour)
-
-    return {
-      timeFormatted,
-      date,
-      hour,
-      minute,
-      type: item.getAttribute('id').toLowerCase()
-    }
-  })
-
-  const closestIndex = closestIndexTo(now, dates.map(date => date.date))
-  const closestDate = dates[closestIndex]
-
-  console.log('items', dates)
-  console.log('closestDate', closestDate)
-
-  if (closestDate) {
-    if (closestDate.type === pointType) {
-      const diference = differenceInMinutes(now, closestDate.date)
-
-      if (diference <= 5) {
-        console.log('hit point has successful')
-        return true
-      }
-    }
-  }
-
-  console.warn('hit point has not successful, please check genio web interface')
-  return false
 }
 
 async function handler () {
@@ -244,33 +154,30 @@ async function handler () {
     baseURL: CAPTCHA_RESOLVER_URL
   })
 
-  const capchaResponseToken = await capchaResolver.resolveCapcha({
+  const { capchaResponse, balance } = await capchaResolver.resolveCapcha({
     googleKey: googleKey,
     pageUrl: GENYO_URL
   })
 
-  console.log('capchaResponseToken', capchaResponseToken)
+  console.log('capchaResponse', capchaResponse)
 
   const { now } = getCurrentHour()
-  console.log('now', format(now, 'dd/MM/yyyy hh:mm z'))
-
+  const nowFormatted = format(now, 'dd/MM/yyyy hh:mm z')
   const pointType = await getPointType({ now })
 
   console.log('pointType', pointType)
 
   await hitPointRequest({
     pointType: pointType,
-    capchaResponseToken: capchaResponseToken,
+    capchaResponse: capchaResponse,
     cookie: cookie
   })
 
-  await checkIfHitPointHasSuccessful({
-    cookie,
-    pointType,
-    now
+  notifier.notify({
+    title: 'Genyo',
+    message: `Ponto registrado com sucesso às: ${nowFormatted}, creditos restantes: ${balance}`
   })
 
-  console.log(new Date().toLocaleString())
   return {
     code: 'ok'
   }

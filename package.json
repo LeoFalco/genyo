@@ -33,7 +33,7 @@
     "eslint-config-standard": "16.0.3",
     "eslint-plugin-import": "2.25.2",
     "eslint-plugin-node": "11.1.0",
-    "eslint-plugin-promise": "5.1.0",
+    "eslint-plugin-promise": "5.1.1",
     "puppeteer": "9.1.1",
     "serverless": "2.63.0",
     "serverless-plugin-include-dependencies": "5.0.0"

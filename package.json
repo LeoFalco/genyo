@@ -21,9 +21,9 @@
     "date-fns": "2.25.0",
     "date-fns-tz": "1.1.6",
     "dom-parser": "0.1.6",
+    "eh-dia-util": "1.0.1",
     "lodash": "4.17.21",
     "ms": "2.1.3",
-    "node-notifier": "10.0.0",
     "puppeteer-core": "10.4.0",
     "utf-8-validate": "5.0.7"
   },

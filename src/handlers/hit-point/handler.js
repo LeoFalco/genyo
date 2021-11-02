@@ -3,7 +3,6 @@
 const ms = require('ms')
 const chromium = require('chrome-aws-lambda')
 const fetch = require('node-fetch')
-const notifier = require('node-notifier')
 const { delay } = require('../../core/delay')
 const { format, setMinutes, setHours, closestIndexTo } = require('date-fns')
 const { utcToZonedTime } = require('date-fns-tz')
@@ -13,10 +12,11 @@ const { CaptchaResolver } = require('../../core/captcha-resolver')
 const CAPTCHA_API_KEY = '6f22570623a8b7eb2158155f11f171a0'
 const GENYO_URL = 'https://app.genyo.com.br?aba=registrarPonto'
 const CAPTCHA_RESOLVER_URL = 'http://2captcha.com'
+const ehDiaUtil = require('eh-dia-util')
 
 async function closeBrowser (browser) {
   if (browser) {
-    await browser.close().catch()
+    await browser.close()
   }
 }
 
@@ -29,13 +29,10 @@ async function createBrowser () {
   })
 }
 
-async function getDataFromNavigatorPage ({ browser }) {
-  let googleKey = null
-  let cookie = null
-
+async function getDataFromNavigatorPage () {
+  const browser = await createBrowser()
   try {
-    const pages = await browser.pages()
-    const page = pages[0] || await browser.newPage()
+    const page = await browser.newPage()
     console.log('new page created')
 
     await page.goto(GENYO_URL, {
@@ -48,23 +45,20 @@ async function getDataFromNavigatorPage ({ browser }) {
 
     const result = await page.evaluate(() => {
       const iframe = document.querySelector('iframe')
+      const googleKey = new URL(iframe.src).searchParams.get('k')
+      const cookie = document.cookie
       return {
-        captchaSrc: iframe.src,
-        cookie: document.cookie
+        googleKey,
+        cookie
       }
     })
 
-    googleKey = new URL(result.captchaSrc).searchParams.get('k')
-    cookie = result.cookie
-  } catch (err) {
-    console.log('error', err)
-  } finally {
-    closeBrowser(browser)
-  }
+    await closeBrowser(browser)
 
-  return {
-    googleKey,
-    cookie
+    return result
+  } catch (err) {
+    await closeBrowser(browser)
+    throw err
   }
 }
 
@@ -125,58 +119,50 @@ async function hitPointRequest ({ capchaResponse, pointType, cookie }) {
 }
 
 async function handler () {
-  console.log(new Date().toLocaleString())
-
-  const timeToSleep = ms('4m') * Math.random()
-
-  console.log('timeToSleep', timeToSleep / 1000, 'seconds')
-
-  await delay(timeToSleep)
-
-  console.log('timeToSleep finished', new Date().toLocaleString())
-
-  const browser = await createBrowser()
-  const { googleKey, cookie } = await getDataFromNavigatorPage({
-    browser
-  })
-
-  console.log('googleKey', googleKey)
-  console.log('cookie', cookie)
-
-  if (!googleKey || !cookie) {
-    return {
-      code: 'error'
-    }
-  }
-
-  const capchaResolver = new CaptchaResolver({
-    apiKey: CAPTCHA_API_KEY,
-    baseURL: CAPTCHA_RESOLVER_URL
-  })
-
-  const { capchaResponse, balance } = await capchaResolver.resolveCapcha({
-    googleKey: googleKey,
-    pageUrl: GENYO_URL
-  })
-
-  console.log('capchaResponse', capchaResponse)
-
   const { now } = getCurrentHour()
-  const nowFormatted = format(now, 'dd/MM/yyyy hh:mm z')
-  const pointType = await getPointType({ now })
 
-  console.log('pointType', pointType)
+  if (ehDiaUtil(now)) {
+    const timeToSleep = ms('4m') * Math.random()
 
-  await hitPointRequest({
-    pointType: pointType,
-    capchaResponse: capchaResponse,
-    cookie: cookie
-  })
+    console.log('timeToSleep', timeToSleep / 1000, 'seconds')
 
-  notifier.notify({
-    title: 'Genyo',
-    message: `Ponto registrado com sucesso às: ${nowFormatted}, creditos restantes: ${balance}`
-  })
+    await delay(timeToSleep)
+
+    console.log('timeToSleep finished', new Date().toLocaleString())
+
+    const { googleKey, cookie } = await getDataFromNavigatorPage()
+
+    console.log('googleKey', googleKey)
+    console.log('cookie', cookie)
+
+    if (!googleKey || !cookie) {
+      return {
+        code: 'error'
+      }
+    }
+
+    const capchaResolver = new CaptchaResolver({
+      apiKey: CAPTCHA_API_KEY,
+      baseURL: CAPTCHA_RESOLVER_URL
+    })
+
+    const { capchaResponse } = await capchaResolver.resolveCapcha({
+      googleKey: googleKey,
+      pageUrl: GENYO_URL
+    })
+
+    console.log('capchaResponse', capchaResponse)
+
+    const pointType = await getPointType({ now })
+
+    console.log('pointType', pointType)
+
+    await hitPointRequest({
+      pointType: pointType,
+      capchaResponse: capchaResponse,
+      cookie: cookie
+    })
+  }
 
   return {
     code: 'ok'

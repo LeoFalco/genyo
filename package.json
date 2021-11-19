@@ -18,7 +18,7 @@
     "axios": "0.24.0",
     "bufferutil": "4.0.5",
     "chrome-aws-lambda": "10.1.0",
-    "date-fns": "2.25.0",
+    "date-fns": "2.26.0",
     "date-fns-tz": "1.1.6",
     "dom-parser": "0.1.6",
     "eh-dia-util": "1.0.1",

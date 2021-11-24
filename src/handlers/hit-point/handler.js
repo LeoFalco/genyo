@@ -124,7 +124,7 @@ async function handler () {
   if (ehDiaUtil(now)) {
     const timeToSleep = Math.round(ms('4m') * Math.random())
 
-    console.log('timeToSleep', timeToSleep / 1000, 'seconds')
+    console.log('timeToSleep', timeToSleep, 'milliseconds')
 
     await delay(timeToSleep)
 

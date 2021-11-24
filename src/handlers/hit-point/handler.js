@@ -122,11 +122,11 @@ async function handler () {
   const { now } = getCurrentHour()
 
   if (ehDiaUtil(now)) {
-    const timeToSleep = Math.round(ms('4m') * Math.random())
+    const timeToSleep = Math.round(ms('4m') * Math.random() / 1000)
 
-    console.log('timeToSleep', timeToSleep, 'milliseconds')
+    console.log('timeToSleep', timeToSleep, 'seconds')
 
-    await delay(timeToSleep)
+    await delay(timeToSleep * 1000)
 
     console.log('timeToSleep finished', new Date().toLocaleString())
 

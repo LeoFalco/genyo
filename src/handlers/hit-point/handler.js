@@ -4,7 +4,7 @@ const ms = require('ms')
 const chromium = require('chrome-aws-lambda')
 const fetch = require('node-fetch')
 const { delay } = require('../../core/delay')
-const { format, setMinutes, setHours, closestIndexTo } = require('date-fns')
+const { setMinutes, setHours, closestIndexTo } = require('date-fns')
 const { utcToZonedTime } = require('date-fns-tz')
 const { URL } = require('url')
 const { CaptchaResolver } = require('../../core/captcha-resolver')
@@ -12,7 +12,6 @@ const { CaptchaResolver } = require('../../core/captcha-resolver')
 const CAPTCHA_API_KEY = '6f22570623a8b7eb2158155f11f171a0'
 const GENYO_URL = 'https://app.genyo.com.br?aba=registrarPonto'
 const CAPTCHA_RESOLVER_URL = 'http://2captcha.com'
-const ehDiaUtil = require('eh-dia-util')
 
 async function closeBrowser (browser) {
   if (browser) {
@@ -121,48 +120,46 @@ async function hitPointRequest ({ capchaResponse, pointType, cookie }) {
 async function handler () {
   const { now } = getCurrentHour()
 
-  if (ehDiaUtil(now)) {
-    const timeToSleep = Math.round(ms('4m') * Math.random() / 1000)
+  const timeToSleep = Math.round(ms('4m') * Math.random() / 1000)
 
-    console.log('timeToSleep', timeToSleep, 'seconds')
+  console.log('timeToSleep', timeToSleep, 'seconds')
 
-    await delay(timeToSleep * 1000)
+  await delay(timeToSleep * 1000)
 
-    console.log('timeToSleep finished', new Date().toLocaleString())
+  console.log('timeToSleep finished', new Date().toLocaleString())
 
-    const { googleKey, cookie } = await getDataFromNavigatorPage()
+  const { googleKey, cookie } = await getDataFromNavigatorPage()
 
-    console.log('googleKey', googleKey)
-    console.log('cookie', cookie)
+  console.log('googleKey', googleKey)
+  console.log('cookie', cookie)
 
-    if (!googleKey || !cookie) {
-      return {
-        code: 'error'
-      }
+  if (!googleKey || !cookie) {
+    return {
+      code: 'error'
     }
-
-    const capchaResolver = new CaptchaResolver({
-      apiKey: CAPTCHA_API_KEY,
-      baseURL: CAPTCHA_RESOLVER_URL
-    })
-
-    const { capchaResponse } = await capchaResolver.resolveCapcha({
-      googleKey: googleKey,
-      pageUrl: GENYO_URL
-    })
-
-    console.log('capchaResponse', capchaResponse)
-
-    const pointType = await getPointType({ now })
-
-    console.log('pointType', pointType)
-
-    await hitPointRequest({
-      pointType: pointType,
-      capchaResponse: capchaResponse,
-      cookie: cookie
-    })
   }
+
+  const capchaResolver = new CaptchaResolver({
+    apiKey: CAPTCHA_API_KEY,
+    baseURL: CAPTCHA_RESOLVER_URL
+  })
+
+  const { capchaResponse } = await capchaResolver.resolveCapcha({
+    googleKey: googleKey,
+    pageUrl: GENYO_URL
+  })
+
+  console.log('capchaResponse', capchaResponse)
+
+  const pointType = await getPointType({ now })
+
+  console.log('pointType', pointType)
+
+  await hitPointRequest({
+    pointType: pointType,
+    capchaResponse: capchaResponse,
+    cookie: cookie
+  })
 
   return {
     code: 'ok'

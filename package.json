@@ -34,7 +34,7 @@
     "eslint-plugin-promise": "5.2.0",
     "node-fetch": "2.6.7",
     "puppeteer": "13.1.2",
-    "serverless": "2.72.2",
+    "serverless": "3.0.0",
     "serverless-plugin-include-dependencies": "5.0.0"
   }
 }

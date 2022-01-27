@@ -1,18 +1,16 @@
 service: genyo
 app: genyo
 org: leonardofalco
-frameworkVersion: '2'
+frameworkVersion: "3"
 
 package:
   excludeDevDependencies: true
-
 
 plugins:
   - serverless-plugin-include-dependencies
 
 provider:
   name: aws
-  lambdaHashingVersion: 20201221
   memorySize: 1024
   timeout: 120
   logRetentionInDays: 14
@@ -27,4 +25,3 @@ functions:
   hit-point:
     handler: src/handlers/hit-point/handler.handler
     timeout: 120
-

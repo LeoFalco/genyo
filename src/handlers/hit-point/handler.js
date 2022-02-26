@@ -9,7 +9,6 @@ const { utcToZonedTime } = require('date-fns-tz')
 const { URL } = require('url')
 const { CaptchaResolver } = require('../../core/captcha-resolver')
 
-const CAPTCHA_API_KEY = '6f22570623a8b7eb2158155f11f171a0'
 const GENYO_URL = 'https://app.genyo.com.br?aba=registrarPonto'
 const CAPTCHA_RESOLVER_URL = 'http://2captcha.com'
 
@@ -98,8 +97,8 @@ async function hitPointRequest ({ capchaResponse, pointType, cookie }) {
     referrer: 'https://app.genyo.com.br/?aba=abaColaborador',
     referrerPolicy: 'strict-origin-when-cross-origin',
     body: new URLSearchParams({
-      codigoEmpresa: '2WRBK',
-      numeroAcesso: '629268',
+      codigoEmpresa: process.env.GENYO_CODIGO_EMPRESA,
+      numeroAcesso: process.env.GENYO_NUMERO_ACESSO,
       foto: '',
       observacao: '',
       'g-recaptcha-response': capchaResponse,
@@ -140,7 +139,7 @@ async function handler () {
   }
 
   const capchaResolver = new CaptchaResolver({
-    apiKey: CAPTCHA_API_KEY,
+    apiKey: process.env.CAPTCHA_API_KEY,
     baseURL: CAPTCHA_RESOLVER_URL
   })
 

@@ -4,3 +4,5 @@ jspm_packages/
 .build
 serverless_sdk/
 s_*
+.env
+.env.q
